@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kopiointi</title>
+</head>
+<body>
+    <h1>Kopiointi</h1>
+    <textarea id="teksti" rows="9" cols="30">Kopioitava teksti</textarea>
+    <button id="copyButton">Kopioi teksti</button>
+    <p id="kopio"></p>
+    
+    <script>
+        document.getElementById('copyButton').addEventListener('click', function() {
+            const textArea = document.getElementById('teksti')
+            navigator.clipboard.writeText(textArea.value)
+                .then(() => {
+                document.getElementById('kopio').textContent = 'teksti kopioitu';
+                })
+            .catch(err => {
+                console.error('Virhe', err);
+                document.getElementById('kopio').textContent = 'Virhe';
+                });
+        });
+    </script>
+</body>
+</html>
