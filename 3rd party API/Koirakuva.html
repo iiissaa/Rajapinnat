@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koirakuvat</title>
+</head>
+<body>
+
+    <h1>Satunnainen koirakuva</h1>
+
+   
+    <label for="rotuSelect">Valitse koiran rotu:</label>
+    <select id="rotuSelect">
+        <option value="">Satunnainen rotu</option>
+        <option value="bulldog">Bulldog</option>
+        <option value="labrador">Labrador</option>
+        <option value="poodle">Poodle</option>
+        <option value="beagle">Beagle</option>
+        <option value="retriever">Golden Retriever</option>
+    </select>
+    
+
+    <button id="randomKoiraButton">Näytä satunnainen koirakuva</button>
+
+    <button id="valittuKoiraButton">Näytä valitun rodun koirakuva</button>
+
+  
+    <div id="koiraKuvaContainer">
+        <img id="koiraKuva" src="" alt="ei saatavilla" style="max-width: 400px; max-height: 400px;">
+    </div>
+
+    <script>
+   
+        document.getElementById('randomKoiraButton').addEventListener('click', function() {
+            const url = 'https://dog.ceo/api/breeds/image/random'; 
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const imageUrl = data.message; 
+                    document.getElementById('koiraKuva').src = imageUrl;
+                })
+                .catch(error => {
+                    console.error('Virhe', error);
+                    alert('Virhe');
+                });
+        });
+
+       
+        document.getElementById('valittuKoiraButton').addEventListener('click', function() {
+            const rotu = document.getElementById('rotuSelect').value; 
+
+            if (!rotu) {
+                alert('Valitse rotu');
+                return;
+            }
+
+            const url = `https://dog.ceo/api/breed/${rotu}/images/random`;
+
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const imageUrl = data.message; 
+                    document.getElementById('koiraKuva').src = imageUrl;
+                })
+                .catch(error => {
+                    console.error('Virhe', error);
+                    alert('Virhe');
+                });
+        });
+    </script>
+
+</body>
+</html>
