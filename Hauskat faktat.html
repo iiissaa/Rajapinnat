@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kissa faktat</title>
+</head>
+<body>
+    <h1>Kissat</h1>
+    
+    <button id="faktaNappi">Satunnainen fakta</button>
+    <p id="fakta"></p>
+
+    <button id="rotuNappi">Satunnainen rotu</button>
+    <p id="rotu"></p>
+
+    <script>
+        // Satunnainen kissafakta
+        document.getElementById('faktaNappi').addEventListener('click', function() {
+            fetch('https://catfact.ninja/fact') 
+                .then(response => response.json())
+                .then(data => {
+				const randomFact = data[Math.floor(Math.random() * data.length)];
+                    document.getElementById('fakta').textContent = data.fact;
+                })
+                .catch(error => {
+                    console.error('Virhe', error);
+                    document.getElementById('fakta').textContent = 'Virhe';
+                });
+        });
+		document.getElementById('rotuNappi').addEventListener('click', function() {
+            fetch('https://api.thecatapi.com/v1/breeds')
+                .then(response => response.json())
+                .then(data => {
+                    const randomBreed = data[Math.floor(Math.random() * data.length)];
+                    document.getElementById('rotu').textContent = randomBreed.name;
+                })
+                .catch(error => {
+                    console.error('Virhe', error);
+                    document.getElementById('rotu').textContent = 'Virhe';
+                });
+        });
+	</script>
+	
+</body>
+</html>
