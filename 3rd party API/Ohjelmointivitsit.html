@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohjelmointivitsit</title>
+</head>
+<body>
+
+    <h1>Ohjelmointivitsi</h1>
+
+ 
+    <button id="vitsiNappi">Lataa satunnainen vitsi</button>
+	<p id="vitsi"></p>
+
+    <script>
+        document.getElementById('vitsiNappi').addEventListener('click', function() {
+            fetch('https://programming-quotesapi.vercel.app/api/random')
+                .then(response => response.json()) 
+                .then(data => {
+                    document.getElementById('vitsi').textContent = data.quote;
+                })
+                .catch(error => {
+                    console.error('Virhe', error);
+                    document.getElementById('vitsi').textContent = 'virhe';
+                });
+        });
+    </script>
+
+</body>
+</html>
