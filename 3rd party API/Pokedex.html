@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Tietopankki</title>
+    <style>
+
+
+        #pokemon-types span {
+            font-weight: bold;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        #pokemon-image, #shiny-image {
+            width: 150px;
+            height: 150px;
+        }
+
+        #pokedex-navigation {
+            margin-top: 20px;
+        }
+
+        #abilities-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #abilities-list li {
+            padding: 5px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pokémon Tietopankki</h1>
+
+        <label for="search">Hae Pokémonin nimi tai Pokedex numero:</label>
+        <input type="text" id="search" placeholder="Nimi tai numero" />
+        <button onclick="searchPokemon()">Hae</button>
+
+        <div id="pokemon-details">
+            <h2 id="pokemon-name">Pokémon nimi</h2>
+            <p id="pokemon-id">Pokedex numero: </p>
+            <p id="pokemon-weight">Paino: </p>
+            <p id="pokemon-height">Korkeus: </p>
+            <div id="pokemon-types">Tyypit: </div>
+            <div id="pokemon-stats">Statsit: </div>
+            <img id="pokemon-image" src="" alt="Pokemon kuva" />
+            <img id="shiny-image" src="" alt="Shiny pokemon kuva" />
+            <button onclick="playPokemonCry()">Kuuntele Pokémonin huuto</button>
+        </div>
+
+        <div id="pokedex-navigation">
+            <button onclick="getNextPokemon()">Seuraava Pokémon</button>
+            <button onclick="getPreviousPokemon()">Edellinen Pokémon</button>
+        </div>
+
+        <div id="pokemon-abilities">
+            <h3>Kyvyt:</h3>
+            <ul id="abilities-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        let currentPokemonId = null;
+
+        const typeColors = {
+            fire: 'red',
+            water: 'blue',
+            grass: 'green',
+            electric: 'yellow',
+            psychic: 'purple',
+            bug: 'brown',
+            normal: 'gray',
+            fighting: 'orange',
+            poison: 'violet',
+            ground: 'tan',
+            flying: 'lightblue',
+            fairy: 'pink',
+            steel: 'silver',
+            rock: 'gray',
+            ice: 'lightblue',
+            dragon: 'indigo',
+            ghost: 'purple',
+            dark: 'black',
+            bug: 'brown',
+            fairy: 'pink',
+        };
+
+        function searchPokemon() {
+            const searchTerm = document.getElementById("search").value.toLowerCase();
+            let url;
+
+            if (isNaN(searchTerm)) {
+                url = `https://pokeapi.co/api/v2/pokemon/${searchTerm}`;
+            } else {
+                url = `https://pokeapi.co/api/v2/pokemon/${searchTerm}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    displayPokemonData(data);
+                })
+                .catch(error => {
+                    alert("Pokémonia ei löytynyt!");
+                });
+        }
+
+        function displayPokemonData(pokemon) {
+            currentPokemonId = pokemon.id;
+            document.getElementById("pokemon-name").textContent = pokemon.name;
+            document.getElementById("pokemon-id").textContent = `Pokedex numero: ${pokemon.id}`;
+            document.getElementById("pokemon-weight").textContent = `Paino: ${pokemon.weight} hectograms`;
+            document.getElementById("pokemon-height").textContent = `Korkeus: ${pokemon.height} decimetres`;
+
+            displayPokemonTypes(pokemon.types);
+            displayPokemonStats(pokemon.stats);
+            displayImages(pokemon);
+            displayAbilities(pokemon.abilities);
+
+            document.getElementById("pokemon-details").style.display = "block";
+        }
+
+        function displayPokemonTypes(types) {
+            const typesDiv = document.getElementById("pokemon-types");
+            typesDiv.innerHTML = "Tyypit: ";
+            types.forEach(type => {
+                const span = document.createElement("span");
+                span.textContent = type.type.name;
+                span.style.backgroundColor = typeColors[type.type.name] || 'gray';
+                typesDiv.appendChild(span);
+            });
+        }
+
+        function displayPokemonStats(stats) {
+            const statsDiv = document.getElementById("pokemon-stats");
+            statsDiv.innerHTML = "Statsit: ";
+            stats.forEach(stat => {
+                const p = document.createElement("p");
+                p.textContent = `${stat.stat.name}: ${stat.base_stat}`;
+                statsDiv.appendChild(p);
+            });
+        }
+
+        function displayImages(pokemon) {
+            const imageUrl = pokemon.sprites.front_default;
+            const shinyUrl = pokemon.sprites.front_shiny;
+
+            document.getElementById("pokemon-image").src = imageUrl;
+            document.getElementById("shiny-image").src = shinyUrl;
+        }
+
+        function playPokemonCry() {
+            const cryUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/132.ogg`;
+            const audio = new Audio(cryUrl);
+            audio.play();
+        }
+
+        function displayAbilities(abilities) {
+            const abilitiesList = document.getElementById("abilities-list");
+            abilitiesList.innerHTML = '';
+            abilities.forEach(ability => {
+                const li = document.createElement("li");
+                li.textContent = ability.ability.name;
+                li.addEventListener("click", () => showAbilityDetails(ability.ability.url));
+                abilitiesList.appendChild(li);
+            });
+        }
+
+        function showAbilityDetails(url) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    alert(`Ability: ${data.name}\nEffect: ${data.effect_entries[0].effect}`);
+                });
+        }
+
+        function getNextPokemon() {
+            if (currentPokemonId === null) return;
+            fetch(`https://pokeapi.co/api/v2/pokemon/${currentPokemonId + 1}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayPokemonData(data);
+                });
+        }
+
+        function getPreviousPokemon() {
+            if (currentPokemonId === null || currentPokemonId <= 1) return;
+            fetch(`https://pokeapi.co/api/v2/pokemon/${currentPokemonId - 1}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayPokemonData(data);
+                });
+        }
+    </script>
+</body>
+</html>

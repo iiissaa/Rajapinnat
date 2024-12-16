@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelien Tarjoukset</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .form-container {
+            margin: 20px;
+            text-align: center;
+        }
+
+        .form-container input, .form-container button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            width: 250px;
+        }
+
+        .game-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .game-item {
+            margin: 15px;
+            text-align: center;
+            width: 200px;
+        }
+
+        .game-item img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .game-item a {
+            color: #333;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+
+        .game-item a:hover {
+            color: #4CAF50;
+        }
+
+        .game-detail {
+            margin: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+    
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Pelien Tarjoukset</h1>
+    </header>
+
+    <div class="form-container">
+        <input type="text" id="gameSearch" placeholder="Hae pelejä...">
+        <button onclick="searchGames()">Hae</button>
+    </div>
+
+    <div class="game-list" id="gameList"></div>
+
+    <div class="game-detail" id="gameDetail" style="display: none;"></div>
+
+    
+
+    <script>
+        const baseURL = "https://www.cheapshark.com/api/1.0";
+
+        // Hae pelit CheapShark API:sta
+        async function searchGames() {
+            const searchQuery = document.getElementById("gameSearch").value;
+            const url = `${baseURL}/games?title=${searchQuery}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                displayGameResults(data);
+            } catch (error) {
+                console.error("Error fetching games:", error);
+            }
+        }
+
+        // Näytä pelien hakutulokset
+        function displayGameResults(games) {
+            const gameList = document.getElementById("gameList");
+            gameList.innerHTML = "";
+            games.forEach(game => {
+                const gameItem = document.createElement("div");
+                gameItem.classList.add("game-item");
+                gameItem.innerHTML = `
+                    <a href="#" onclick="showGameDetail(${game.gameID})">
+                        <img src="https://cdn.fanatical.com/production/product" alt="${game.title}"">
+                        <p>${game.title}</p>
+                    </a>
+                `;
+                gameList.appendChild(gameItem);
+            });
+        }
+
+        // Näytä pelin yksityiskohtaiset tiedot
+        async function showGameDetail(gameID) {
+            const url = `https://www.cheapshark.com/api/1.0/games?id=${gameID}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const game = data[0]; // Pelin tiedot
+
+                const gameDetail = document.getElementById("gameDetail");
+                gameDetail.style.display = "block";
+                gameDetail.innerHTML = `
+                    <h3>${game.title}</h3>
+                    <img src='https://www.cheapshark.com/api/1.0/games?id=${gameID}' alt="${game.title}">
+                    <p><strong>Alin hinta koskaan:</strong> $${game.deals[0].price}</p>
+                    <h4>Nykyiset tarjoukset:</h4>
+                    <ul>
+                        ${game.deals.map(deal => `
+                            <li>
+                                <p><strong>Tarjous kaupassa:</strong> ${deal.storeID}</p>
+                                <p><strong>Tarjouksen hinta:</strong> $${deal.price}</p>
+                                <p><strong>Alkuperäinen hinta:</strong> $${deal.retailPrice}</p>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                console.error("Error fetching game details:", error);
+            }
+        }
+    </script>
+
+</body>
+</html>
