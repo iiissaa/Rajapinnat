@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animehaku - Jikan API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .form-container {
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .form-container input, .form-container select, .form-container button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            width: 250px;
+        }
+
+        .anime-list, .suggestion-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .anime-item {
+            margin: 15px;
+            text-align: center;
+            width: 200px;
+        }
+
+        .anime-item img {
+            width: 150px;
+            height: 225px;
+            object-fit: cover;
+        }
+
+        .anime-item a {
+            color: #333;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+
+        .anime-item a:hover {
+            color: #4CAF50;
+        }
+
+        .anime-detail {
+            margin: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            text-align: center;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Animehaku</h1>
+    </header>
+
+    <div class="form-container">
+        <input type="text" id="animeSearch" placeholder="Hae animesarjoja...">
+        <select id="animeType">
+            <option value="">Valitse tyyppi</option>
+            <option value="tv">TV</option>
+            <option value="movie">Movie</option>
+            <option value="ova">OVA</option>
+            <option value="special">Special</option>
+            <option value="ona">ONA</option>
+            <option value="music">Music</option>
+            <option value="cm">CM</option>
+            <option value="pv">PV</option>
+            <option value="tv_special">TV Special</option>
+        </select>
+        <select id="animeStatus">
+            <option value="">Valitse status</option>
+            <option value="airing">Airing</option>
+            <option value="complete">Complete</option>
+            <option value="upcoming">Upcoming</option>
+        </select>
+        <select id="animeRating">
+            <option value="">Valitse ikäraja</option>
+            <option value="g">G</option>
+            <option value="pg">PG</option>
+            <option value="pg13">PG-13</option>
+            <option value="r17">R17</option>
+            <option value="r">R</option>
+            <option value="rx">RX</option>
+        </select>
+        <input type="number" id="minScore" placeholder="Min score (0-10)" min="0" max="10">
+        <input type="number" id="maxScore" placeholder="Max score (0-10)" min="0" max="10">
+        <button onclick="searchAnime()">Hae Anime</button>
+    </div>
+
+    <div class="anime-list" id="animeList"></div>
+
+    <div class="anime-detail" id="animeDetail" style="display: none;"></div>
+
+    <footer>
+        <button onclick="getRandomAnime()">Satunnainen Anime</button>
+        <h2>Tällä hetkellä julkaisussa</h2>
+        <div class="anime-list" id="currentAnimeList"></div>
+    </footer>
+
+    <script>
+        // Jikan API URL
+        const baseURL = "https://api.jikan.moe/v4";
+
+        // Hae animeja Jikan API:sta
+        async function searchAnime() {
+            const searchQuery = document.getElementById("animeSearch").value;
+            const animeType = document.getElementById("animeType").value;
+            const animeStatus = document.getElementById("animeStatus").value;
+            const animeRating = document.getElementById("animeRating").value;
+            const minScore = document.getElementById("minScore").value;
+            const maxScore = document.getElementById("maxScore").value;
+
+            let url = `${baseURL}/anime?q=${searchQuery}&page=1`;
+
+            if (animeType) url += `&type=${animeType}`;
+            if (animeStatus) url += `&status=${animeStatus}`;
+            if (animeRating) url += `&rating=${animeRating}`;
+            if (minScore) url += `&score.gte=${minScore}`;
+            if (maxScore) url += `&score.lte=${maxScore}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                displayAnimeResults(data.data);
+            } catch (error) {
+                console.error("Error fetching anime data:", error);
+            }
+        }
+
+        // Näytä hakutulokset
+        function displayAnimeResults(animes) {
+            const animeList = document.getElementById("animeList");
+            animeList.innerHTML = "";
+            animes.slice(0, 6).forEach(anime => {
+                const animeItem = document.createElement("div");
+                animeItem.classList.add("anime-item");
+                animeItem.innerHTML = `
+                    <a href="#" onclick="showAnimeDetail(${anime.mal_id})">
+                        <img src="${anime.images.jpg.image_url}" alt="${anime.title}">
+                        <p>${anime.title} (${anime.title_japanese})</p>
+                    </a>
+                `;
+                animeList.appendChild(animeItem);
+            });
+        }
+
+        // Hae yksityiskohtaiset tiedot animeesta
+        async function showAnimeDetail(animeId) {
+            const url = `${baseURL}/anime/${animeId}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const anime = data.data;
+                const animeDetail = document.getElementById("animeDetail");
+                animeDetail.style.display = "block";
+                animeDetail.innerHTML = `
+                    <h3>${anime.title} (${anime.title_japanese})</h3>
+                    <img src="${anime.images.jpg.image_url}" alt="${anime.title}">
+                    <p><strong>Synopsis:</strong> ${anime.synopsis}</p>
+                    <p><strong>Tyyppi:</strong> ${anime.type}</p>
+                    <p><strong>Jaksojen määrä:</strong> ${anime.episodes ? anime.episodes : "Ei saatavilla"}</p>
+                    <p><strong>Status:</strong> ${anime.status}</p>
+                    <p><strong>Ilmestyi:</strong> ${anime.aired ? anime.aired.from : "Ei tietoa"} - ${anime.aired ? anime.aired.to : "Ei tietoa"}</p>
+                    <p><strong>Ikäraja:</strong> ${anime.rating}</p>
+                    <p><strong>Score:</strong> ${anime.score}</p>
+                `;
+                showSuggestions(anime.mal_id);
+            } catch (error) {
+                console.error("Error fetching anime detail:", error);
+            }
+        }
+
+        // Ehdotuksia animeita
+        async function showSuggestions(animeId) {
+            const url = `${baseURL}/anime/${animeId}/recommendations`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const suggestions = data.data.slice(0, 4);
+                const suggestionList = document.createElement("div");
+                suggestionList.classList.add("suggestion-list");
+
+                suggestions.forEach(suggestion => {
+                    const suggestionItem = document.createElement("div");
+                    suggestionItem.classList.add("anime-item");
+                    suggestionItem.innerHTML = `
+                        <a href="#" onclick="showAnimeDetail(${suggestion.entry.mal_id})">
+                            <img src="${suggestion.entry.images.jpg.image_url}" alt="${suggestion.entry.title}">
+                            <p>${suggestion.entry.title} (${suggestion.entry.title_japanese})</p>
+                        </a>
+                    `;
+                    suggestionList.appendChild(suggestionItem);
+                });
+
+                document.getElementById("animeDetail").appendChild(suggestionList);
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+            }
+        }
+
+        // Hae satunnainen anime
+        async function getRandomAnime() {
+            const randomId = Math.floor(Math.random() * 10000) + 1; // Satunnainen ID
+            showAnimeDetail(randomId);
+        }
+
+        // Hae tällä hetkellä julkaisussa olevia animeita
+        async function getCurrentAnime() {
+            const url = `${baseURL}/seasons/now`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                displayCurrentAnime(data.data);
+            } catch (error) {
+                console.error("Error fetching current anime:", error);
+            }
+        }
+
+        // Näytä tällä hetkellä julkaisussa olevat animeit
+        function displayCurrentAnime(animes) {
+            const currentAnimeList = document.getElementById("currentAnimeList");
+            currentAnimeList.innerHTML = "";
+            animes.slice(0, 8).forEach(anime => {
+                const animeItem = document.createElement("div");
+                animeItem.classList.add("anime-item");
+                animeItem.innerHTML = `
+                    <a href="#" onclick="showAnimeDetail(${anime.mal_id})">
+                        <img src="${anime.images.jpg.image_url}" alt="${anime.title}">
+                        <p>${anime.title} (${anime.title_japanese})</p>
+                    </a>
+                `;
+                currentAnimeList.appendChild(animeItem);
+            });
+        }
+
+        // Hae automaattisesti julkaisussa olevia animeita heti sivun latauksen yhteydessä
+        window.onload = getCurrentAnime;
+
+    </script>
+
+</body>
+</html>
